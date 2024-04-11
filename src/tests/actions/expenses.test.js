@@ -1,4 +1,4 @@
-import { startAddExpense, addExpense, editExpense, removeExpense, setExpenses, startSetExpenses, startRemoveExpense } from "../../actions/expenses";
+import { startAddExpense, addExpense, editExpense, removeExpense, setExpenses, startSetExpenses, startRemoveExpense, startEditExpense } from "../../actions/expenses";
 import expenses from "../fixtures/expenses";
 import configureMockStore from 'redux-mock-store';
 import thunk from "redux-thunk";
@@ -51,6 +51,28 @@ test('should setup edit expense action object', ()=>{
             description: 'New desc'
         }
     });
+});
+test('should edit expense from firebase', (done)=>{
+    const store = createMockStore({});
+    const expenseData = {
+        description: 'Mouse',
+        amount: 3000,
+        note: 'This one is better',
+        createdAt: 1000
+    }
+    const id = '1';
+    store.dispatch(startEditExpense(id, expenseData)).then(()=>{
+        const actions = store.getActions();
+        expect(actions[0]).toEqual({
+            type: 'EDIT_EXPENSE',
+            id,
+            updates: expenseData
+        });
+        return database.ref(`expenses/${actions[0].id}`).once('value');        
+    }).then((snapshot)=>{
+        expect(snapshot.val()).toEqual(expenseData);
+        done(); //force jest to wait;
+    })
 });
 test('should setup add expense action object with provided values', ()=>{
     const action = addExpense(expenses[1]);
